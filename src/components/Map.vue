@@ -20,20 +20,41 @@ export default {
       returnAllResults: true,
     }
     GSheetReader(options, results => {
-      let stops = results.filter(item => {
+      let locs = results.filter(item => {
         return item.Name;
       }).map(item => {
-        return { x: item.nx, y: item.ny, z: item.nz, name: item.Name, con: item.Connections, layer: item.Layer };
+        return { x: item.nx, y: item.ny, z: item.nz, name: item.Name, cons: item.Connections, layer: item.Layer };
       });
-      stops.forEach(item => {
+      let locMap = {};
+      locs.forEach(item => {
+        locMap[item.name] = item;
+      });
+      locs.forEach(loc => {
         this.data.push({
-          x: [item.x],
-          y: [item.z],
-          z: [item.y],
-          text: item.name,
+          x: [loc.x],
+          y: [loc.z],
+          z: [loc.y],
+          text: loc.name,
+          name: loc.name,
           mode: "markers+text",
           type: "scatter3d"
         });
+        loc.cons.split(", ").forEach(name => {
+          let con = locMap[name];
+          if (!con) {
+            console.log(loc)
+            console.log(name)
+            console.log(con)
+            return;
+          }
+          this.data.push({
+            x: [loc.x, con.x],
+            y: [loc.z, con.z],
+            z: [loc.y, con.y],
+            mode: "line",
+            type: "scatter3d"
+          });
+        })
       })
     });
   },
@@ -48,6 +69,28 @@ export default {
           l: 50,
           r: 50,
           b: 50
+        },
+        showlegend: false,
+        marker: {
+          tick0: 0,
+          dtick: 250
+        },
+        scene: {
+          xaxis: {
+            autotick: false,
+            tick0: 0,
+            dtick: 500,
+          },
+          yaxis: {
+            autotick: false,
+            tick0: 0,
+            dtick: 500,
+          },
+          zaxis: {
+            autotick: false,
+            tick0: 0,
+            dtick: 500,
+          }
         }
       }
     }
